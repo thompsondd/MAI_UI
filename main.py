@@ -12,6 +12,7 @@ import pandas as pd
 from collections import defaultdict
 from utils import *
 import time
+import io
 from PIL import Image, ImageOps
 
 def read_img(img_path):
