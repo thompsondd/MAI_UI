@@ -52,6 +52,9 @@ def draw_masks_fromList(
 # =====================================================
 st.set_page_config(layout='wide', page_title='Detect Anything')
 
+if "server_url" not in st.session_state:
+  st.session_state["server_url"] = st.secrets["server_url"]
+
 with st.sidebar:
     server_url = st.text_input("Server URL",value="")
     set_button = st.button("Apply")
