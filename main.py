@@ -12,6 +12,7 @@ import pandas as pd
 from collections import defaultdict
 from utils import *
 import time
+from PIL import Image, ImageOps
 
 def read_img(img_path):
   return cv2.cvtColor(cv2.imread(img_path),cv2.COLOR_BGR2RGB)
@@ -148,6 +149,7 @@ if detect_submitted:
         status.update(
             label="AI is working", state="running", expanded=False
         )
+        st.session_state["image"] = query_img_encode
         start = time.time()
         response = requests.post(
            f'{st.session_state["server_url"]}/classify',
@@ -238,7 +240,12 @@ if allow_show_img:
         dataware[label]["entities"].append(pack(conf, bbox))
 
     dataframe = {"Class":[], "Image":[], "Num":[]}
-    image = read_img(os.path.join(st.session_state["sample_folder"],'query.jpg'))
+    # image = read_img(os.path.join(st.session_state["sample_folder"],'query.jpg'))
+    img_bytes = base64.b64decode(st.session_state["image"])
+ 
+    image =  Image.open(io.BytesIO(img_bytes))
+    image = ImageOps.exif_transpose(image)
+    image = np.array(image)
     current_shape = image.shape[:-1]
 
 
