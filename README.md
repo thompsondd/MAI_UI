@@ -1,1 +1,1 @@
-# MAI_UI
+# Detect-Anything
