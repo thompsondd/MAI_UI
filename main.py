@@ -222,6 +222,7 @@ if apply_db and selected_db_name is not None:
             if "status" in response_data:
                 st.session_state['sdb_name'] = selected_db_name
                 st.toast('Setup DB Successfully', icon='🎉')
+                st.rerun()
             elif "error" in response_data:
                 st.toast(f'Error in setup db: {response_data["error"]}', icon="🥞")
         except Exception as e:
