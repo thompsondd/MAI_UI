@@ -393,7 +393,7 @@ if allow_show_img:
     # image = read_img(os.path.join(st.session_state["sample_folder"],'query.jpg'))
     img_bytes = base64.b64decode(st.session_state["image"])
  
-    image =  Image.open(io.BytesIO(img_bytes))
+    image =  Image.open(io.BytesIO(img_bytes)).convert("RGB")
     image = ImageOps.exif_transpose(image)
     image = np.array(image)
     current_shape = image.shape[:-1]
