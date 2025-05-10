@@ -336,7 +336,7 @@ if detect_submitted:
                 st.error("Invalid response format from server")
                 allow_show_img = False
 
-            print(return_data)
+            # print(return_data)
             st.session_state["reptime"] = time.time()-start
             
             during = time.time()-start
