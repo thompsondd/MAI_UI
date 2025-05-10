@@ -4,3 +4,4 @@ pandas
 pillow
 torch
 streamlit
+scikit-learn
