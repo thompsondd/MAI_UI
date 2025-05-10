@@ -282,9 +282,9 @@ def validate_img(classify_result, img, rules):
         block_bbox = get_block_bbox_one_line(lni["block_positions"], line_info[ln]["bbox"])
         test= draw_block_one_line(test, block_bbox, lni["invalid_blocks"], alpha= 0.7)
         if lni["blocks_error"]!= {}:
-            print(f"Line {ln+1}:")
+            # print(f"Line {ln+1}:")
             error_message[ln+1] = [bvals["message"] for bvals in lni["blocks_error"].values()]
-            for bix, bvals in lni["blocks_error"].items():
-                print("\t"+bvals["message"])
+            # for bix, bvals in lni["blocks_error"].items():
+            #     print("\t"+bvals["message"])
     return test, error_message
     
