@@ -395,7 +395,7 @@ if allow_show_img:
             }
     dataware = defaultdict(lambda:{
         "best_entity":-1,
-        "top_left":[float("INF"), float("INF")],
+        "pos":[float("INF"), float("INF")],
         "entities":[]
     })
 
@@ -413,7 +413,26 @@ if allow_show_img:
         dataware[label]["best_entity"] = best_idx
         dataware[label]["entities"].append(pack(conf, bbox))
 
-    dataframe = {"Class":[], "Image":[], "Num":[]}
+        pos = dataware[label]["pos"]
+        x1 = bbox[0]-bbox[2]/2
+        y1 = bbox[1]-bbox[3]/2
+        if x1 <= pos[0] and y1 < pos[1]:
+            dataware[label]["pos"] = [x1,y1]
+
+    # Create a list of (key, pos) tuples for sorting
+    items = [(key, data["pos"]) for key, data in dataware.items()]
+    
+    # Sort by y (descending) then by x (ascending)
+    # pos[1] is y-coordinate, pos[0] is x-coordinate
+    sorted_items = sorted(items, key=lambda item: (item[1][1], item[1][0]))
+    
+    # Create result dictionary with index as key and class_name
+    # Assuming best_entity refers to the class_name in your data
+    class_view_index = {}
+    for idx, (key, _) in enumerate(sorted_items):
+        class_view_index[key] = idx
+
+    dataframe = {"Class":[], "Image":[], "Num":[], "Class_Index":{}}
     img_bytes = base64.b64decode(st.session_state["image"])
  
     image =  Image.open(io.BytesIO(img_bytes)).convert("RGB")
@@ -424,11 +443,12 @@ if allow_show_img:
 
     # outobjs = image.copy()
     num_class = 0
-    for class_name, vals in dataware.items():
+    for idx, (class_name, vals) in enumerate(dataware.items()):
         num_class +=1
         dataframe["Class"].append(class_name)
         num = len(vals["entities"])
         dataframe["Num"].append(num)
+        dataframe["Class_Index"][class_view_index[class_name]] = idx
 
         if vals["best_entity"] > -1:
             best_entity = vals["entities"][vals["best_entity"]]
@@ -463,9 +483,10 @@ if allow_show_img:
                     if index >= num_class: continue
                     space = cols[col_idx].container(height = 200, border =True)
                     with space:
-                        color = rgb_to_hex(*color_mapping[dataframe['Class'][index]])
-                        st.color_picker(f"{dataframe['Class'][index]}: {dataframe['Num'][index]}", color, disabled =True, key=f"c{index}{color}{time.time()}")
-                        st.image(dataframe['Image'][index])
+                        class_index = dataframe['Class_Index'][index]
+                        color = rgb_to_hex(*color_mapping[dataframe['Class'][class_index]])
+                        st.color_picker(f"{dataframe['Class'][class_index]}: {dataframe['Num'][class_index]}", color, disabled =True, key=f"c{class_index}{color}{time.time()}")
+                        st.image(dataframe['Image'][class_index])
     if check_planogram:
         if st.session_state["planogram"]==[]:
             st.toast(f'Error: Planogram is empty !', icon="🥞")
