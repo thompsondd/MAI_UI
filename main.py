@@ -337,15 +337,24 @@ if detect_submitted:
                 allow_show_img = False
 
             # print(return_data)
-            st.session_state["reptime"] = time.time()-start
+            format_float = lambda x: float(f"{float(x):.3f}")
+            st.session_state["reptime"] = format_float(time.time()-start)
             
             during = time.time()-start
             if 'return_data' not in st.session_state:
                 st.session_state["return_data"] = return_data['query_image']
                 st.session_state["return_data"]['during'] = during
+                st.session_state['run_time'] = format_float(return_data["run_time"])
+                st.session_state['search_time'] = format_float(return_data["search_time"])
+                st.session_state['embed_time'] = format_float(return_data["embed_time"])
+                st.session_state['detect_time'] = format_float(return_data["detect_time"])
             else:
                 st.session_state["return_data"] = return_data['query_image']
                 st.session_state["return_data"]['during'] = during
+                st.session_state['run_time'] = format_float(return_data["run_time"])
+                st.session_state['search_time'] = format_float(return_data["search_time"])
+                st.session_state['embed_time'] = format_float(return_data["embed_time"])
+                st.session_state['detect_time'] = format_float(return_data["detect_time"])
 
             status.update(label="Processing complete!", state="complete", expanded=False)
             allow_show_img = True
@@ -474,7 +483,19 @@ if allow_show_img:
         st.image(numpy_to_base64_cv2(output_image))
 
     with col2:
-        st.metric("Response Time", st.session_state.get("reptime",-1))
+        
+        response_col, predict_col, detect_col, embed_col, search_col = st.columns(5)
+        with response_col:
+            st.metric("Response Time (s)", st.session_state.get("reptime",-1))
+        with predict_col:
+            st.metric("Predict Time (s)", st.session_state.get("run_time",-1))
+        with detect_col:
+            st.metric("Detect Time (s)", st.session_state.get("detect_time",-1))
+        with embed_col:
+            st.metric("Embed Time (s)", st.session_state.get("embed_time",-1))
+        with search_col:
+            st.metric("Search Time (s)", st.session_state.get("search_time",-1))
+        
         with st.expander("Class"):
             for row_idx in range(num_row):
                 cols = st.columns(num_col)
