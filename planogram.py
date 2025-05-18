@@ -177,7 +177,7 @@ def row_identify(orig_shape, xyxy_bbox, cvt2rel=True):
     cxcy_bbox = list(map(lambda bbox: [(bbox[0]+bbox[2])/(2*scale_x), (bbox[1]+bbox[3])/(2*scale_y)], xyxy_bbox))
     
     # Apply DBSCAN clustering based on the y-coordinate (cy) to identify rows
-    db = DBSCAN(eps=0.09, min_samples=3).fit(cxcy_bbox)
+    db = DBSCAN(eps=0.09, min_samples=1).fit(cxcy_bbox)
     labels = db.labels_
     
     # Create a mapping of original indices to bboxes and their centers
