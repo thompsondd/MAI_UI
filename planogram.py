@@ -250,8 +250,9 @@ def get_block_bbox_one_line(block_positions, bbox):
 def draw_block_one_line(img, block_bbox, invalid_blocks, alpha= 0.7):
     overlay = img.copy()
     output_image = img.copy()
+    h,w,c = output_image.shape
     for block_id, block_b in block_bbox.items():
-        x1,y1,x2,y2 = convert_xyxy_bbox(*block_b, 662, 1033)
+        x1,y1,x2,y2 = convert_xyxy_bbox(*block_b, w,h)
         if block_id in invalid_blocks:
             
             # Create a colored mask
