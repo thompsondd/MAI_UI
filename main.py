@@ -316,6 +316,7 @@ if detect_submitted:
             "params":{
                 "k_shot":st.session_state["k_shot"],
                 "bbox_conf":st.session_state["bbox_conf"],
+                "shelf_seg":check_planogram,
             }
         }
 
@@ -380,10 +381,16 @@ if allow_show_img:
     img_shape = return_data['img_shape']
 
     index_valid = [idx for idx, valid in zip(range(len(labels)), conf > valid_conf) if valid]
+    valid_idx_map = {idx:new_idx for new_idx, idx in enumerate(index_valid)}
 
     valid_labels = [ labels[idx] for idx in index_valid]
     valid_conf = [ conf[idx] for idx in index_valid]
     valid_bbox = [ bbox[idx] for idx in index_valid]
+    valid_line_segment = {
+        int(line_id):[valid_idx_map[box_id] for box_id in box_ids if box_id in valid_idx_map] \
+            for line_id, box_ids in return_data['line_segment'].items() if int(line_id)>=0
+    }
+    # print(f"valid_line_segment: {valid_line_segment}")
 
     # """
     #     {
@@ -517,7 +524,7 @@ if allow_show_img:
                 "label":valid_labels,
                 "bbox":valid_bbox,
                 "img_shape":img_shape,
-            }, image.copy(), st.session_state["planogram"])
+            }, image.copy(), st.session_state["planogram"], lines=valid_line_segment)
             plano_img_col, error_col = st.columns([2,5])
             with plano_img_col:
                 st.image(numpy_to_base64_cv2(plano[...,::-1]))

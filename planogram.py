@@ -177,7 +177,7 @@ def row_identify(orig_shape, xyxy_bbox, cvt2rel=True):
     cxcy_bbox = list(map(lambda bbox: [(bbox[0]+bbox[2])/(2*scale_x), (bbox[1]+bbox[3])/(2*scale_y)], xyxy_bbox))
     
     # Apply DBSCAN clustering based on the y-coordinate (cy) to identify rows
-    db = DBSCAN(eps=0.09, min_samples=3).fit(cxcy_bbox)
+    db = DBSCAN(eps=0.1, min_samples=1).fit(cxcy_bbox)
     labels = db.labels_
     
     # Create a mapping of original indices to bboxes and their centers
@@ -234,6 +234,7 @@ def get_line_info(img_class_info, line_info):
             bbox_line[line_idx]['id'].append(bbox_idx)
             bbox_line[line_idx]['label'].append(img_class_info['label'][bbox_idx])
     return bbox_line
+
 def get_block_bbox_one_line(block_positions, bbox):
     block_bbox = {block_idx:[float("INF"),float("INF"),float("-INF"),float("-INF")] for block_idx in block_positions.keys()}
 
@@ -270,8 +271,8 @@ def draw_block_one_line(img, block_bbox, invalid_blocks, alpha= 0.7):
 
     return cv2.addWeighted(output_image, 1 - alpha, overlay, alpha, 0)
 
-def validate_img(classify_result, img, rules):
-    lines = row_identify(classify_result['img_shape'], [rxywh2rxyxy(x,y,w,h) for (x,y,w,h) in classify_result['bbox']], False)
+def validate_img(classify_result, img, rules, lines):
+    # lines = row_identify(classify_result['img_shape'], [rxywh2rxyxy(x,y,w,h) for (x,y,w,h) in classify_result['bbox']], False)
     line_info = get_line_info(classify_result, lines)
 
     result = validate_lines(rules, line_info)
