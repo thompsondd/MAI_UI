@@ -367,7 +367,7 @@ if detect_submitted:
 
 if st.session_state.get("return_data") is not None:
     with st.expander("Postproccess"):
-        valid_conf = st.slider("Valid Confident Score", 0.0, 1.0, 0.5, 0.01)
+        valid_conf = st.slider("Valid Confident Score", 0.0, 1.0, 0.35, 0.01)
         if st.button("Show Image"):
             allow_show_img = True
 
