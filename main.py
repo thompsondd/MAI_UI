@@ -386,10 +386,11 @@ if allow_show_img:
     valid_labels = [ labels[idx] for idx in index_valid]
     valid_conf = [ conf[idx] for idx in index_valid]
     valid_bbox = [ bbox[idx] for idx in index_valid]
-    valid_line_segment = {
-        int(line_id):[valid_idx_map[box_id] for box_id in box_ids if box_id in valid_idx_map] \
-            for line_id, box_ids in return_data['line_segment'].items() if int(line_id)>=0
-    }
+    if check_planogram:
+        valid_line_segment = {
+            int(line_id):[valid_idx_map[box_id] for box_id in box_ids if box_id in valid_idx_map] \
+                for line_id, box_ids in return_data['line_segment'].items() if int(line_id)>=0
+        }
     # print(f"valid_line_segment: {valid_line_segment}")
 
     # """
