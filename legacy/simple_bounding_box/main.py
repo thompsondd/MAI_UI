@@ -67,6 +67,41 @@ def make_server_request(method, endpoint, data=None, timeout=2000):
         st.error(f"Unexpected error: {str(e)}")
         st.stop()
 
+# def read_img(img_path):
+#   return cv2.cvtColor(cv2.imread(img_path),cv2.COLOR_BGR2RGB)
+
+# def draw_masks_fromList(
+#     image, chosen_index, contours, origin_size_mask,
+#     labels, colors, alpha = 0.4,
+#     contour_color = (0,0,0), contour_line_weight = 3):
+#   masked_image = image.copy()
+#   contour_list = []
+#   for i, mask_index in enumerate(chosen_index):
+#     contour = contours[mask_index]
+#     contour_list.append(contour)
+#     mask = cv2.drawContours(np.zeros(origin_size_mask), [contour], -1, (255), -1)
+#     # mask[offset_masks[i][0]:offset_masks[i][1],...] = masks_generated[i]
+
+#     if mask.shape[0]!= image.shape[0] or mask.shape[1]!= image.shape[1]:
+#       mask = cv2.resize(mask, (image.shape[1], image.shape[0]))
+
+#     # bbox, max_contour = mask_to_bbox(mask, return_contour=True)
+#     # contour_list.append(max_contour)
+
+#     masked_image = np.where(np.repeat(mask[:, :, np.newaxis], 3, axis=2),
+#                             np.asarray(colors[int(labels[i][-1])], dtype='uint8'),
+#                             masked_image)
+
+#     masked_image = masked_image.astype(np.uint8)
+#     del mask
+
+#   gc.collect()
+
+#   image = cv2.addWeighted(image, alpha, masked_image, (1-alpha), 0)
+#   image = cv2.drawContours(image, contour_list, -1, contour_color, contour_line_weight)
+
+#   return image
+
 
 # =====================================================
 st.set_page_config(layout='wide', page_title='Detect Anything')
@@ -344,8 +379,6 @@ if allow_show_img:
     conf = np.array(return_data['conf'])
     bbox = return_data['bbox']
     img_shape = return_data['img_shape']
-    bbox_format = return_data['bbox_format']
-    # print(f"return_data: {return_data.keys()}")
 
     index_valid = [idx for idx, valid in zip(range(len(labels)), conf > valid_conf) if valid]
     valid_idx_map = {idx:new_idx for new_idx, idx in enumerate(index_valid)}
@@ -435,23 +468,12 @@ if allow_show_img:
         dataframe["Class_Index"][class_view_index[class_name]] = idx
 
         if vals["best_entity"] > -1:
-            
             best_entity = vals["entities"][vals["best_entity"]]
+            x1,y1,x2,y2 = convert_bbox(*best_entity["bbox"], current_shape[1], current_shape[0])
+            
             max_shape = 60
-
-            if 'xyxyn' == bbox_format:
-                x1,y1,x2,y2 = convert_bbox(*best_entity["bbox"], current_shape[1], current_shape[0])
-                
-                ratio = min(max_shape/(x2-x1), max_shape/(y2-y1))
-                img = cv2.resize(image[y1:y2, x1:x2, :], None, fx=ratio, fy=ratio)
-                
-            if 'xywhrn' == bbox_format:
-                cx, cy, w, h, angle = xywhrn2xywhr(best_entity["bbox"], current_shape[1], current_shape[0])
-                img = crop_obb(image, (cx, cy, w, h, angle))
-                h,w = img.shape[:-1]
-                ratio = min(max_shape/w, max_shape/h)
-                img = cv2.resize(img, None, fx=ratio, fy=ratio)
-
+            ratio = min(max_shape/(x2-x1), max_shape/(y2-y1))
+            img = cv2.resize(image[y1:y2, x1:x2, :], None, fx=ratio, fy=ratio)
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             dataframe["Image"].append(numpy_to_base64_cv2(img))
 
@@ -462,7 +484,7 @@ if allow_show_img:
     
 
     main_img = image.copy()
-    output_image, color_mapping = draw_bounding_boxes(main_img, valid_bbox, valid_labels, img_shape, 0.8, bbox_format)
+    output_image, color_mapping = draw_bounding_boxes(main_img, valid_bbox, valid_labels, img_shape, 0.8)
     output_image = cv2.cvtColor(output_image, cv2.COLOR_BGR2RGB)
     
     with col1:
@@ -503,7 +525,6 @@ if allow_show_img:
                 "label":valid_labels,
                 "bbox":valid_bbox,
                 "img_shape":img_shape,
-                "bbox_format":bbox_format,
             }, image.copy(), st.session_state["planogram"], lines=valid_line_segment)
             plano_img_col, error_col = st.columns([2,5])
             with plano_img_col:

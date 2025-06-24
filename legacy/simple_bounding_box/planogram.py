@@ -4,52 +4,6 @@ from sklearn.cluster import DBSCAN
 from collections import defaultdict
 
 # ============================== Utils ========================================
-
-def rxywh2rxy4(boxes, h, w):
-    """
-    Optimized NumPy version with better memory efficiency and performance.
-    
-    Args:
-        boxes (np.ndarray): Array of shape (B, 5) where last dimension is [x, y, w, h, r]
-    
-    Returns:
-        np.ndarray: Array of shape (B, 4, 2) containing corner coordinates
-    """
-    # Extract components (avoid creating intermediate arrays)
-    x_center = boxes[..., 0]*w
-    y_center = boxes[..., 1]*h
-    half_w = boxes[..., 2]*w / 2
-    half_h = boxes[..., 3]*h / 2
-    rotation = boxes[..., 4]
-    
-    # Compute trigonometric values
-    cos_r = np.cos(rotation)
-    sin_r = np.sin(rotation)
-    
-    # Pre-allocate result array
-    result_shape = boxes.shape[:-1] + (4, 2)
-    result = np.empty(result_shape, dtype=boxes.dtype)
-    
-    # Define corner offsets (relative to center, unrotated)
-    # Top-left, top-right, bottom-right, bottom-left
-    corner_offsets = np.array([[-1, -1], [1, -1], [1, 1], [-1, 1]], dtype=boxes.dtype)
-    
-    # Vectorized computation for all corners at once
-    for i, (dx, dy) in enumerate(corner_offsets):
-        # Unrotated corner position
-        corner_x = dx * half_w
-        corner_y = dy * half_h
-        
-        # Apply rotation
-        rotated_x = corner_x * cos_r - corner_y * sin_r
-        rotated_y = corner_x * sin_r + corner_y * cos_r
-        
-        # Translate to absolute coordinates
-        result[..., i, 0] = (rotated_x + x_center)/w
-        result[..., i, 1] = (rotated_y + y_center)/h
-    
-    return result
-
 def rxywh2rxyxy(x,y,w,h):
     return x-w/2,y-h/2,x+w/2,y+h/2
 
@@ -274,38 +228,24 @@ def get_line_info(img_class_info, line_info):
     })
     for line_idx, bboxes in line_info.items():
         for bbox_idx in bboxes:
-            if img_class_info['bbox_format'] == 'xywhn':
-                bbox = rxywh2rxyxy(*img_class_info['bbox'][bbox_idx])
-                bbox_line[line_idx]['centroid'].append(cal_centriod(*bbox))
-            if img_class_info['bbox_format'] == 'xywhrn':
-                bbox = rxywh2rxy4(np.array(img_class_info['bbox'][bbox_idx]), *img_class_info['img_shape'])
-                bbox_line[line_idx]['centroid'].append((bbox[...,0].mean(), bbox[...,1].mean()))
-            
+            bbox = rxywh2rxyxy(*img_class_info['bbox'][bbox_idx])
             bbox_line[line_idx]['bbox'].append(bbox)
+            bbox_line[line_idx]['centroid'].append(cal_centriod(*bbox))
             bbox_line[line_idx]['id'].append(bbox_idx)
             bbox_line[line_idx]['label'].append(img_class_info['label'][bbox_idx])
     return bbox_line
 
-def get_block_bbox_one_line(block_positions, bbox, bbox_format='xywhn'):
+def get_block_bbox_one_line(block_positions, bbox):
     block_bbox = {block_idx:[float("INF"),float("INF"),float("-INF"),float("-INF")] for block_idx in block_positions.keys()}
 
     for block_idx, pos in block_positions.items():
         for pos_idx in pos:
-            if bbox_format=='xywhn':
-                a,b,c,d = bbox[pos_idx]
-                x1,y1,x2,y2 = block_bbox[block_idx]
-                block_bbox[block_idx][0] = min(x1, a)
-                block_bbox[block_idx][1] = min(y1, b)
-                block_bbox[block_idx][2] = max(x2, c)
-                block_bbox[block_idx][3] = max(y2, d)
-            if bbox_format=='xywhrn':
-                print(f"{bbox_format} -> {bbox[pos_idx].shape}: \n\t{bbox[pos_idx]}")
-                for x, y in bbox[pos_idx].tolist():
-                    block_bbox[block_idx][0] = min(block_bbox[block_idx][0], x)
-                    block_bbox[block_idx][1] = min(block_bbox[block_idx][1], y)
-                    block_bbox[block_idx][2] = max(block_bbox[block_idx][2], x)
-                    block_bbox[block_idx][3] = max(block_bbox[block_idx][3], y)
-
+            x1,y1,x2,y2 = block_bbox[block_idx]
+            a,b,c,d = bbox[pos_idx]
+            block_bbox[block_idx][0] = min(x1, a)
+            block_bbox[block_idx][1] = min(y1, b)
+            block_bbox[block_idx][2] = max(x2, c)
+            block_bbox[block_idx][3] = max(y2, d)
     return block_bbox
 
 def draw_block_one_line(img, block_bbox, invalid_blocks, alpha= 0.7):
@@ -341,7 +281,7 @@ def validate_img(classify_result, img, rules, lines):
     error_message = {}
 
     for ln, lni in result.items():
-        block_bbox = get_block_bbox_one_line(lni["block_positions"], line_info[ln]["bbox"], classify_result['bbox_format'])
+        block_bbox = get_block_bbox_one_line(lni["block_positions"], line_info[ln]["bbox"])
         test= draw_block_one_line(test, block_bbox, lni["invalid_blocks"], alpha= 0.7)
         if lni["blocks_error"]!= {}:
             # print(f"Line {ln+1}:")
@@ -349,7 +289,4 @@ def validate_img(classify_result, img, rules, lines):
             # for bix, bvals in lni["blocks_error"].items():
             #     print("\t"+bvals["message"])
     return test, error_message
-
-
-
-
+    
