@@ -470,13 +470,13 @@ if allow_show_img:
 
     with col2:
         
-        response_col, predict_col, detect_col, embed_col, search_col = st.columns(5)
+        response_col, predict_col, embed_col, search_col = st.columns(4)
         with response_col:
             st.metric("Response Time (s)", st.session_state.get("reptime",-1))
         with predict_col:
             st.metric("Predict Time (s)", st.session_state.get("run_time",-1))
-        with detect_col:
-            st.metric("Detect Time (s)", st.session_state.get("detect_time",-1))
+        # with detect_col:
+        #     st.metric("Detect Time (s)", st.session_state.get("detect_time",-1))
         with embed_col:
             st.metric("Embed Time (s)", st.session_state.get("embed_time",-1))
         with search_col:
