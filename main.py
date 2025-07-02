@@ -492,7 +492,7 @@ if allow_show_img:
                     with space:
                         class_index = dataframe['Class_Index'][index]
                         color = rgb_to_hex(*color_mapping[dataframe['Class'][class_index]])
-                        st.color_picker(f"{dataframe['Class'][class_index]}: {dataframe['Num'][class_index]}", color, disabled =True, key=f"c{class_index}{color}{time.time()}")
+                        st.color_picker(f"{dataframe['Class'][class_index]}: {dataframe['Num'][class_index]}", color, disabled =False, key=f"c{class_index}{color}{time.time()}")
                         st.image(dataframe['Image'][class_index])
     if check_planogram:
         if st.session_state["planogram"]==[]:
